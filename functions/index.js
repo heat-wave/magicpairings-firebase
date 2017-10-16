@@ -10,9 +10,10 @@ exports.sendPairingNotification = functions.database.ref('/dci/{dciNo}/latestRou
     const dciNo = event.params.dciNo;
 
     // Get the list of device notification tokens.
-    const getDeviceTokensPromise = admin.database().ref(`/dci/${dciNo}/tokens`).once('value');
-    return Promise.all([getDeviceTokensPromise]).then(results => {
-        // Notification details.
+    const getDeviceTokensRef = admin.database().ref(`/dci/` + dciNo + '/tokens');
+        //event.data.ref.parent.child('tokens');
+    getDeviceTokensRef.once('value').then(results => {
+        console.log('Results: ', results.val());
         const payload = {
             notification: {
                 title: 'You have a new follower!',
@@ -20,11 +21,7 @@ exports.sendPairingNotification = functions.database.ref('/dci/{dciNo}/latestRou
             }
         };
 
-        const tokensSnapshot = results[0];
-        if (!tokensSnapshot.hasChildren()) {
-            return console.log(`There are no notification tokens to send to for ${dciNo}. Found: `, results[0].toString());
-        }
-        const tokens = Object.keys(tokensSnapshot.val());
+        const tokens = results.val();
 
         return admin.messaging().sendToDevice(tokens, payload).then(response => {
             // For each message check if there was an error.
