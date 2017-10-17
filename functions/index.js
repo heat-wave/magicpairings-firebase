@@ -10,7 +10,7 @@ exports.sendPairingNotification = functions.database.ref('/dci/{dciNo}/latestRou
     const dciNo = event.params.dciNo;
 
     // Get the list of device notification tokens.
-    const getDeviceTokensPromise = admin.database().ref(`/dci/${dciNo}/tokens`).once('value');
+    const getDeviceTokensPromise = admin.database().ref(`/tokens/${dciNo}`).once('value');
     return Promise.all([getDeviceTokensPromise]).then(results => {
         // Notification details.
         const payload = {
