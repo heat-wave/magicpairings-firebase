@@ -10,18 +10,23 @@ exports.sendPairingNotification = functions.database.ref('/dci/{dciNo}/latestRou
     const dciNo = event.params.dciNo;
 
     // Get the list of device notification tokens.
-    const getDeviceTokensRef = admin.database().ref(`/tokens/${dciNo}`);
+    const getDeviceTokensRef = admin.database().ref(`/tokens/${dciNo}`).once('value');
+    const getLatestRoundRef = admin.database().ref(`/dci/${dciNo}/latestRound`).once('value');
         //event.data.ref.parent.child('tokens');
-    getDeviceTokensRef.once('value').then(results => {
-        console.log('Results: ', results.val());
+    Promise.all([getDeviceTokensRef, getLatestRoundRef]).then(results => {
+        const tokens = results[0].val();
+        const round = results[1].val();
+
+        // Check if there are any device tokens.
+        // if (!tokensSnapshot.hasChildren()) {
+        //     return console.log('There are no notification tokens to send to.');
+        // }
         const payload = {
             notification: {
-                title: 'You have a new follower!',
-                body: `Jason Woorhees is now following you.`
+                title: 'Round #? has started!',
+                body: `Your opponent is ${round.opponent} at table ${round.table}.`
             }
         };
-
-        const tokens = results.val();
 
         return admin.messaging().sendToDevice(tokens, payload).then(response => {
             // For each message check if there was an error.
